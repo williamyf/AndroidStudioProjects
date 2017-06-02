@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+# this line is meaningless that just for testing whether i can commit with svn client.
 ##############################################################################
 ##
 ##  Gradle start up script for UN*X
