@@ -2,6 +2,7 @@ package com.example.administrator.myapplication;
 
 import android.app.AlertDialog;
 import android.app.NativeActivity;
+import android.content.res.Configuration;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
@@ -47,7 +48,7 @@ public class KgeView extends NativeActivity {
         Log.e("wyf","bbbbbbbbbb");
     }
 
-    Rect mWndRect = new Rect();
+//    Rect mWndRect = new Rect();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,8 +70,8 @@ public class KgeView extends NativeActivity {
                     });
         }
 
-        WindowManager wndMgr = (WindowManager) getSystemService(WINDOW_SERVICE);
-        wndMgr.getDefaultDisplay().getRectSize(mWndRect);
+//        WindowManager wndMgr = (WindowManager) getSystemService(WINDOW_SERVICE);
+//        wndMgr.getDefaultDisplay().getRectSize(mWndRect);
         Log.e("wyf", "after OnCreate!!!");
     }
 
@@ -107,6 +108,21 @@ public class KgeView extends NativeActivity {
 
             _popupVP.dismiss();
             _popupVP = null;
+        }
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        //newConfig.orientation获得当前屏幕状态是横向或者竖向
+        //Configuration.ORIENTATION_PORTRAIT 表示竖向
+        //Configuration.ORIENTATION_LANDSCAPE 表示横屏
+        Log.e("wyf","onConfigurationChanged");
+        if(newConfig.orientation==Configuration.ORIENTATION_PORTRAIT){
+            Toast.makeText(this, "现在是竖屏", Toast.LENGTH_SHORT).show();
+        }
+        if(newConfig.orientation==Configuration.ORIENTATION_LANDSCAPE){
+            Toast.makeText(this, "现在是横屏", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -218,8 +234,8 @@ public class KgeView extends NativeActivity {
                         DisplayMetrics dm = new DisplayMetrics();
                         getWindowManager().getDefaultDisplay().getMetrics(dm);
                         final int spacing = 20; // in pixels.
-                        int itemWidth = mWndRect.width() / 3
-                                - spacing; // in pixels.
+                        int nWndWidth = dm.widthPixels < dm.heightPixels ? dm.widthPixels : dm.heightPixels;
+                        int itemWidth = nWndWidth / 3 - spacing; // in pixels.
                         final int gridviewWidth =  _viewpointAdapter.getCount() * (itemWidth + spacing)
                                 - spacing; // in pixels.
                         _viewpointAdapter.setItemWidth(itemWidth);
@@ -338,7 +354,7 @@ public class KgeView extends NativeActivity {
                         });
 
                         PopupWindow _popupViewPoint =
-                                new PopupWindow(viewpointView, mWndRect.width(), itemWidth, true);
+                                new PopupWindow(viewpointView, dm.widthPixels, itemWidth, true);
                         _popupViewPoint.setFocusable(true);
                         _popupViewPoint.setBackgroundDrawable(new BitmapDrawable());
                         _popupViewPoint.setOutsideTouchable(true);

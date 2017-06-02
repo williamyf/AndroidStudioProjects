@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.content.res.Configuration;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -25,6 +26,7 @@ import android.provider.ContactsContract;
 import android.text.TextUtils;
 import android.util.ArraySet;
 import android.util.JsonReader;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -35,6 +37,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.alibaba.fastjson.JSONObject;
 import com.example.net.HttpRequest;
@@ -193,6 +196,22 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             System.out.println("file = " + jsonObj.get("file"));
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        //newConfig.orientation获得当前屏幕状态是横向或者竖向
+        //Configuration.ORIENTATION_PORTRAIT 表示竖向
+        //Configuration.ORIENTATION_LANDSCAPE 表示横屏
+        Log.e("wyf","onConfigurationChanged");
+        if(newConfig.orientation==Configuration.ORIENTATION_PORTRAIT){
+            Toast.makeText(this, "现在是竖屏", Toast.LENGTH_SHORT).show();
+        }
+        if(newConfig.orientation==Configuration.ORIENTATION_LANDSCAPE){
+            Toast.makeText(this, "现在是横屏", Toast.LENGTH_SHORT).show();
         }
     }
 

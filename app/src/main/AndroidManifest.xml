@@ -7,31 +7,49 @@
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.CHANGE_CONFIGURATION"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
+        <!--关于监听横屏竖屏切换的问题 onConfigurationChanged 的响应问题: -->
+        <!--自从Android 3.2（API 13），screen size也开始跟着设备的横竖切换而改变。
+            所以版本高于Android 3.2（API 13）的话在<activity>中设置android:configChanges="orientation“
+            还是解决不了问题的. 所以，在AndroidManifest.xml里设置的MiniSdkVersion和TargetSdkVersion属性
+            大于等于13的情况下，如果你想阻止程序在运行时重新加载Activity，除了设置"orientation"，
+            你还必须设置"screenSize"。-->
+
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar">
+
+        </activity>
+
         <activity
             android:name=".LoginActivity"
-            android:label="@string/title_activity_login">
+            android:label="@string/title_activity_login"
+            android:configChanges="orientation|screenSize|keyboard">
         </activity>
+
         <activity
             android:name=".KgeView"
             android:label="@string/title_activity_kge_view"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+            android:configChanges="orientation|screenSize|keyboard">
             <!-- Tell NativeActivity the name of or .so -->
             <meta-data android:name="android.app.lib_name"
                 android:value="MoreTeapotsNativeActivity" />
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
     </application>
 </manifest>
