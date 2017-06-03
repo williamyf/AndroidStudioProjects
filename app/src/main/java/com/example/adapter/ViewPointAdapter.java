@@ -2,6 +2,8 @@ package com.example.adapter;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.ColorStateList;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -186,6 +188,7 @@ public class ViewPointAdapter extends BaseAdapter {
         }
 
         vh.imageView.setLayoutParams(new RelativeLayout.LayoutParams(getItemWidth(),getItemWidth()));
+        vh.cb_delete.setButtonTintList(mContext.getResources().getColorStateList(R.color.colorAccent));
 
         if (position == getCount()-1) {
             vh.point_name.setText("点击添加靓点");
