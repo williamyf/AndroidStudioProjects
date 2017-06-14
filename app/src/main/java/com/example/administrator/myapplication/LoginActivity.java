@@ -3,6 +3,7 @@ package com.example.administrator.myapplication;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -41,6 +42,7 @@ import android.widget.Toast;
 
 import com.alibaba.fastjson.JSONObject;
 import com.example.net.HttpRequest;
+import com.example.utils.ScreenShot;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -118,9 +120,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         });
 
         Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
+        final Activity _this = this;
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
+                ScreenShot.shoot(_this);
                 attemptLogin();
             }
         });
@@ -438,8 +442,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 //                {
 //                    return false;
 //                }
-//                Intent intent = new Intent(LoginActivity.this, KgeView.class);
-//                startActivity(intent);
+                Intent intent = new Intent(LoginActivity.this, KgeView.class);
+                startActivity(intent);
             } catch (InterruptedException e) {
                 return false;
             }

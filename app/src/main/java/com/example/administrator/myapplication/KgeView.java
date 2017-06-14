@@ -3,9 +3,12 @@ package com.example.administrator.myapplication;
 import android.app.AlertDialog;
 import android.app.NativeActivity;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.LayoutRes;
@@ -14,11 +17,14 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.SurfaceHolder;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
@@ -33,11 +39,19 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.example.adapter.LayerMgrAdapter;
 import com.example.adapter.ViewPointAdapter;
 import com.example.bean.LayerMgrBean;
 import com.example.bean.ViewPointBean;
+import com.example.net.HttpRequest;
+import com.example.utils.ScreenShot;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +61,8 @@ public class KgeView extends NativeActivity {
         System.loadLibrary("c++_shared");
         Log.e("wyf","bbbbbbbbbb");
     }
+
+    private static boolean _bConnecting = false;
 
 //    Rect mWndRect = new Rect();
 
@@ -72,6 +88,12 @@ public class KgeView extends NativeActivity {
 
 //        WindowManager wndMgr = (WindowManager) getSystemService(WINDOW_SERVICE);
 //        wndMgr.getDefaultDisplay().getRectSize(mWndRect);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                initLayerAdapter();
+            }
+        }).start();
         Log.e("wyf", "after OnCreate!!!");
     }
 
@@ -193,12 +215,47 @@ public class KgeView extends NativeActivity {
         return popupWnd;
     }
 
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        Log.e("wyf", "before of ScreenShot.shoot(this)");
+        ScreenShot.shoot(this); // 对于NativeActivity此处截屏无效,需在c/c++端实现截屏功能
+        Log.e("wyf", "after of ScreenShot.shoot(this)");
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        super.surfaceChanged(holder, format, width, height);
+        Log.e("wyf", "surfaceChanged");
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+        super.surfaceDestroyed(holder);
+        Log.e("wyf", "surfaceDestroyed");
+    }
+
+    @Override
+    public void surfaceCreated(SurfaceHolder holder) {
+        super.surfaceCreated(holder);
+        Log.e("wyf", "surfaceCreated");
+    }
+
+    @Override
+    public void surfaceRedrawNeeded(SurfaceHolder holder) {
+        super.surfaceRedrawNeeded(holder);
+        Log.e("wyf", "surfaceRedrawNeeded");
+    }
+
+    View _preView = null;
     public void showUI()
     {
         if( _popupFPS != null )
             return;
 
         _activity = this;
+
+        _preView = getWindow().getDecorView();
 
         this.runOnUiThread(new Runnable()  {
             @Override
@@ -382,7 +439,9 @@ public class KgeView extends NativeActivity {
 
                         PopupWindow layermgrDlg = new PopupWindow(layerView, -2, -2);
                         if (_layermgrAdapter == null) {
-                            initLayerAdapter();
+                            if (!initLayerAdapter()){
+                                return;
+                            }
                         }
                         GridView gridView = (GridView) layerView.findViewById(R.id.gridView);
                         gridView.setAdapter(_layermgrAdapter);
@@ -410,6 +469,15 @@ public class KgeView extends NativeActivity {
                     }
                 });
 
+                FloatingActionButton fab_ruler = (FloatingActionButton)_popupTopRightTools.
+                        getContentView().findViewById(R.id.fab_ruler);
+                fab_ruler.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        // 对于NativeActivity此处截屏无效,需在c/c++端实现截屏功能
+                        ScreenShot.shoot(_activity);
+                    }
+                });
 
             }});
     }
@@ -428,16 +496,75 @@ public class KgeView extends NativeActivity {
         _viewpointAdapter = new ViewPointAdapter(this, dataList);
     }
 
-    private void initLayerAdapter() {
+    public static void saveBitmapToFile(Bitmap bitmap, String _file) throws IOException
+    {
+        BufferedOutputStream os = null;
+        try {
+            File file = new File(_file);  //新建图片
+            int end = _file.lastIndexOf(File.separator);
+            String _filePath = _file.substring(0, end); //获取图片路径
+            File filePath = new File(_filePath);
+            if (!filePath.exists()) {  //如果文件夹不存在，创建文件夹
+                filePath.mkdirs();
+            }
+            file.createNewFile();  //创建图片文件
+            os = new BufferedOutputStream(new FileOutputStream(file));
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, os);  //图片存成png格式。
+        } finally {
+            if (os != null) {
+                try {
+                    os.close();  //关闭流
+                } catch (IOException e) {
+                    Log.e("wyf", e.getMessage(), e);
+                }
+            }
+        }
+    }
+
+    private boolean initLayerAdapter() {
         if (_layermgrAdapter != null)
-            return;
+            return true;
+
         List<LayerMgrBean> dataList = new ArrayList<>();
-        dataList.add(new LayerMgrBean("1","aaa"));
-        dataList.add(new LayerMgrBean("2","bbb"));
-        dataList.add(new LayerMgrBean("3","ccc"));
-        dataList.add(new LayerMgrBean("4","ddd"));
-        dataList.add(new LayerMgrBean("5","eee"));
+
+        if (true) {
+            if (_bConnecting) {
+                Toast.makeText(this,"图层信息正在加载中，请稍后再试！",Toast.LENGTH_SHORT).show();
+                return false;
+            }
+            _bConnecting = true;
+            String strResponse = HttpRequest.sendPost("http://192.168.3.130:5000/modelinfo","");
+            JSONArray jsonArr = JSONObject.parseArray(strResponse);
+            for (Integer i=0; i<jsonArr.size(); ++i)
+            {
+                JSONObject layer = jsonArr.getJSONObject(i);
+                String layerName = layer.getString("name");
+                String thumbnailBinData = layer.getString("thumbnail");
+                byte[] imgdata = Base64.decode(thumbnailBinData,Base64.DEFAULT);
+                Bitmap img = BitmapFactory.decodeByteArray(imgdata,0,imgdata.length);
+
+                String path = Environment.getExternalStorageDirectory().getPath();
+                try {
+                    saveBitmapToFile(img, path+"/wyfcache/layers/"+layerName+".png");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                LayerMgrBean lmb = new LayerMgrBean(i.toString(), layerName);
+                lmb.setBitmap(img);
+                dataList.add(lmb);
+            }
+            _bConnecting = false;
+        }
+        else {
+            dataList.add(new LayerMgrBean("1","aaa"));
+            dataList.add(new LayerMgrBean("2","bbb"));
+            dataList.add(new LayerMgrBean("3","ccc"));
+            dataList.add(new LayerMgrBean("4","ddd"));
+            dataList.add(new LayerMgrBean("5","eee"));
+        }
         _layermgrAdapter = new LayerMgrAdapter(this, dataList);
+        return true;
     }
 
     public void updateFPS(final float fFPS)
